@@ -148,13 +148,14 @@ function buildPanel(container, p) {
         <span class="kasten-info">${t('panelInfo', {rows: p.rowCount, s: p.rowCount > 1 ? (currentLang === 'de' ? 'n' : 's') : '', slots: p.slotsPerRow})}</span>
         <div class="kasten-actions">
             <button class="kasten-btn" title="${t('settTitle')}" data-action="settings">\u2699</button>
-            <button class="kasten-btn kasten-btn-danger" title="Kasten entfernen" data-action="delete">\u00D7</button>
+            <button class="kasten-btn kasten-btn-danger" title="${t('btnDelete')}" data-action="delete">\u00D7</button>
         </div>
     `;
 
-    // Name double-click edit
-    const nameEl = header.querySelector('.kasten-name');
-    nameEl.addEventListener('dblclick', () => {
+    // Name double-click edit — use event delegation on header
+    header.addEventListener('dblclick', (e) => {
+        const nameEl = e.target.closest('.kasten-name');
+        if (!nameEl) return;
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'kasten-name-input';
@@ -165,7 +166,6 @@ function buildPanel(container, p) {
             span.className = 'kasten-name';
             span.title = t('dblClickRename');
             span.textContent = p.name;
-            span.addEventListener('dblclick', nameEl._dblHandler);
             input.replaceWith(span);
             saveToStorage();
         });
@@ -1748,6 +1748,7 @@ function importPlan() {
     input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast(t('toastImportError')); return; }
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
@@ -1797,11 +1798,13 @@ async function loadFromURL() {
     const planParam = params.get('plan');
     if (planParam) {
         try {
+            if (planParam.length > 50000) throw new Error('Share link too large');
             const binary = atob(planParam.replace(/-/g, '+').replace(/_/g, '/'));
             const bytes = new Uint8Array(binary.length);
             for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
             const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
             const json = await new Response(stream).text();
+            if (json.length > 1000000) throw new Error('Decompressed data too large');
             loadPlanData(JSON.parse(json));
             // Clean URL
             window.history.replaceState({}, '', window.location.pathname);

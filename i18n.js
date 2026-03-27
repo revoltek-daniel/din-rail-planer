@@ -473,7 +473,7 @@ function applyI18nToHTML() {
         el.placeholder = t(el.dataset.i18nPlaceholder);
     });
     document.querySelectorAll('[data-i18n-html]').forEach(el => {
-        el.innerHTML = t(el.dataset.i18nHtml);
+        el.textContent = t(el.dataset.i18nHtml);
     });
     // Update page title
     const pn = typeof projectName !== 'undefined' ? projectName : '';
