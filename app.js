@@ -75,11 +75,13 @@ async function init() {
     document.addEventListener('click', onDocClick);
     document.addEventListener('contextmenu', onContextMenu);
 
-    // Project name
+    // Project name — use event delegation to survive DOM replacement
     const pnEl = document.getElementById('projectName');
     pnEl.textContent = projectName;
     document.title = `${projectName} \u2014 ${t('appTitle')}`;
-    pnEl.addEventListener('dblclick', () => {
+    document.querySelector('header').addEventListener('dblclick', (e) => {
+        const target = e.target.closest('.project-name');
+        if (!target) return;
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'project-name-input';
@@ -91,13 +93,12 @@ async function init() {
             span.id = 'projectName';
             span.title = t('dblClickRename');
             span.textContent = projectName;
-            span.addEventListener('dblclick', pnEl._handler);
             input.replaceWith(span);
             document.title = `${projectName} \u2014 ${t('appTitle')}`;
             saveToStorage();
         });
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-        pnEl.replaceWith(input);
+        target.replaceWith(input);
         input.focus();
         input.select();
     });
@@ -861,6 +862,7 @@ function renderComponents() {
 
     for (const comp of components) {
         const def = COMPONENT_DEFS[comp.type];
+        if (!def) continue;
         const rowEl = document.getElementById(`row-${comp.panelId}-${comp.row}`);
         if (!rowEl) continue;
 
@@ -888,10 +890,12 @@ function renderComponents() {
         el.style.borderColor = darken(displayColor, 20);
 
         let ratingText = '';
-        if (comp.amps > 0) {
-            ratingText = comp.char ? `${comp.char}${comp.amps}A` : `${comp.amps}A`;
+        const safeChar = ['', 'B', 'C', 'D'].includes(comp.char) ? comp.char : '';
+        const safeAmps = parseInt(comp.amps) || 0;
+        if (safeAmps > 0) {
+            ratingText = safeChar ? `${safeChar}${safeAmps}A` : `${safeAmps}A`;
         } else if (def.isKlemme && comp.klemmen) {
-            ratingText = `${comp.klemmen}x`;
+            ratingText = `${parseInt(comp.klemmen) || 0}x`;
         }
 
         // Build terminals based on component type
@@ -1601,8 +1605,12 @@ function cleanupWires() {
 
 // ─── Persistence ───
 function saveToStorage() {
-    const data = { projectName, panels, components, wires, nextId, abgaenge };
-    localStorage.setItem('sicherungskasten', JSON.stringify(data));
+    try {
+        const data = { projectName, panels, components, wires, nextId, abgaenge };
+        localStorage.setItem('sicherungskasten', JSON.stringify(data));
+    } catch (e) {
+        console.warn('Storage save failed:', e);
+    }
 }
 
 function loadFromStorage() {
@@ -1632,7 +1640,7 @@ function loadFromStorage() {
             ...wires.map(w => w.id),
             ...abgaenge.map(a => a.id),
         ];
-        if (allIds.length) nextId = Math.max(nextId, Math.max(...allIds) + 1);
+        if (allIds.length) nextId = Math.max(nextId, allIds.reduce((a, b) => Math.max(a, b), 0) + 1);
     } catch (e) {
         console.warn('Fehler beim Laden:', e);
     }
@@ -1678,18 +1686,53 @@ function exportPlan() {
     showToast(t('toastExported'));
 }
 
+function sanitizeString(str, maxLen) {
+    if (typeof str !== 'string') return '';
+    return str.substring(0, maxLen || 100);
+}
+
+function sanitizeComponents(comps) {
+    if (!Array.isArray(comps)) return [];
+    return comps.filter(c => c && typeof c === 'object' && COMPONENT_DEFS[c.type]).map(c => ({
+        ...c,
+        id: parseInt(c.id) || 0,
+        label: sanitizeString(c.label, 50),
+        char: ['', 'B', 'C', 'D'].includes(c.char) ? c.char : '',
+        amps: Math.max(0, Math.min(100, parseInt(c.amps) || 0)),
+        wireColor: /^#[0-9a-fA-F]{6}$/.test(c.wireColor) ? c.wireColor : '#c0392b',
+    }));
+}
+
+function sanitizePanels(pnls) {
+    if (!Array.isArray(pnls) || pnls.length === 0) return [{ id: 1, name: t('defaultPanel'), slotsPerRow: 18, rowCount: 3 }];
+    return pnls.map(p => ({
+        ...p,
+        id: parseInt(p.id) || 1,
+        name: sanitizeString(p.name, 50),
+        slotsPerRow: Math.max(3, Math.min(36, parseInt(p.slotsPerRow) || 18)),
+        rowCount: Math.max(1, Math.min(6, parseInt(p.rowCount) || 3)),
+    }));
+}
+
 function loadPlanData(data) {
+    if (!data || typeof data !== 'object') return;
+
     if (data.slotsPerRow && !data.panels) {
-        panels = [{ id: 1, name: t('defaultPanel'), slotsPerRow: data.slotsPerRow, rowCount: data.rowCount || 3 }];
-        components = (data.components || []).map(c => ({ ...c, panelId: 1 }));
+        panels = [{ id: 1, name: t('defaultPanel'), slotsPerRow: Math.min(36, parseInt(data.slotsPerRow) || 18), rowCount: Math.min(6, parseInt(data.rowCount) || 3) }];
+        components = sanitizeComponents((data.components || []).map(c => ({ ...c, panelId: 1 })));
     } else {
-        panels = data.panels || [{ id: 1, name: t('defaultPanel'), slotsPerRow: 18, rowCount: 3 }];
-        components = data.components || [];
+        panels = sanitizePanels(data.panels);
+        components = sanitizeComponents(data.components);
     }
-    wires = data.wires || [];
-    nextId = data.nextId || 1;
-    abgaenge = data.abgaenge || [];
-    projectName = data.projectName || t('newProject');
+    wires = Array.isArray(data.wires) ? data.wires : [];
+    nextId = parseInt(data.nextId) || 1;
+    abgaenge = Array.isArray(data.abgaenge) ? data.abgaenge.map(a => ({
+        ...a,
+        id: parseInt(a.id) || 0,
+        label: sanitizeString(a.label, 50),
+        cableType: sanitizeString(a.cableType, 30),
+    })) : [];
+    projectName = sanitizeString(data.projectName, 100) || t('newProject');
     const pnEl = document.getElementById('projectName');
     if (pnEl) pnEl.textContent = projectName;
     document.title = `${projectName} \u2014 ${t('appTitle')}`;
@@ -1765,6 +1808,7 @@ async function loadFromURL() {
             return true;
         } catch (err) {
             console.warn('Failed to load shared plan:', err);
+            window.history.replaceState({}, '', window.location.pathname);
         }
     }
 
