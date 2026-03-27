@@ -21,6 +21,15 @@ header {
 
 header h1 { font-size: 1.3rem; color: #e94560; flex-shrink: 0; }
 
+.github-fab {
+    text-decoration: none;
+    color: #888;
+    border-color: #333;
+    background: #1a1a2e;
+}
+
+.github-fab:hover { color: #fff; background: #333; }
+
 .project-name {
     font-size: 0.95rem;
     color: #aaa;
