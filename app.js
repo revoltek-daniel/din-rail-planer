@@ -1139,8 +1139,6 @@ let highlightCompId = null;
 
 function toggleWireDisplay() {
     showWireLines = !showWireLines;
-    const btn = document.getElementById('btnWireDisplay');
-    btn.textContent = showWireLines ? t('btnWireHover') : t('btnWireMarker');
     const fab = document.getElementById('fabWireDisplay');
     if (fab) fab.classList.toggle('active', showWireLines);
     renderWires();
@@ -1516,21 +1514,15 @@ function toggleWiringMode() {
     }
     wiringMode = !wiringMode;
     wiringStart = null;
-    const btn = document.getElementById('btnWiring');
     const indicator = document.getElementById('wiringIndicator');
-
     const fab = document.getElementById('fabWiring');
 
     if (wiringMode) {
-        btn.style.background = '#e94560';
-        btn.style.color = '#fff';
-        fab.classList.add('active');
+        if (fab) fab.classList.add('active');
         indicator.classList.add('show');
         deselectAll();
     } else {
-        btn.style.background = '';
-        btn.style.color = '';
-        fab.classList.remove('active');
+        if (fab) fab.classList.remove('active');
         indicator.classList.remove('show');
     }
 

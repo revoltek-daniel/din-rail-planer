@@ -6,7 +6,9 @@ const TRANSLATIONS = {
         newProject: 'Neues Projekt',
         dblClickRename: 'Doppelklick zum Umbenennen',
 
-        // Header buttons
+        // Header buttons / menus
+        menuProject: '\uD83D\uDCC1 Projekt',
+        menuEdit: '\u270E Bearbeiten',
         btnWiring: '\uD83D\uDD0C Verkabelung',
         btnWireMarker: '\uD83D\uDC41 Nur Marker',
         btnWireHover: '\uD83D\uDC41 Hover-Linien',
@@ -249,6 +251,8 @@ const TRANSLATIONS = {
         newProject: 'New Project',
         dblClickRename: 'Double-click to rename',
 
+        menuProject: '\uD83D\uDCC1 Project',
+        menuEdit: '\u270E Edit',
         btnWiring: '\uD83D\uDD0C Wiring',
         btnWireMarker: '\uD83D\uDC41 Markers only',
         btnWireHover: '\uD83D\uDC41 Hover lines',
