@@ -435,7 +435,14 @@ const TRANSLATIONS = {
     },
 };
 
-let currentLang = localStorage.getItem('sk_lang') || 'de';
+function detectLanguage() {
+    const stored = localStorage.getItem('sk_lang');
+    if (stored) return stored;
+    const browserLang = (navigator.language || '').slice(0, 2).toLowerCase();
+    return TRANSLATIONS[browserLang] ? browserLang : 'en';
+}
+
+let currentLang = detectLanguage();
 
 function t(key, params) {
     const lang = TRANSLATIONS[currentLang] || TRANSLATIONS.de;
