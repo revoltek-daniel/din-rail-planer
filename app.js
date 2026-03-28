@@ -954,7 +954,7 @@ function renderComponents() {
         el.className = 'placed-component' + (comp.id === selectedId ? ' selected' : '');
         el.dataset.id = comp.id;
         el.style.left = (comp.slot * sw) + 'px';
-        el.style.width = (actualSize * sw) + 'px';
+        el.style.width = (actualSize * sw - 1) + 'px';
 
         // Color logic
         let displayColor;
@@ -1123,7 +1123,8 @@ function updateSlotStates() {
     for (const comp of components) {
         const def = COMPONENT_DEFS[comp.type];
         const size = def.isFrei ? (comp.freiSize || 1) : def.size;
-        for (let i = 0; i < size; i++) {
+        // Hide dashed borders between slots of the same component, but keep the last one
+        for (let i = 0; i < size - 1; i++) {
             const slot = document.querySelector(`.slot[data-panel-id="${comp.panelId}"][data-row="${comp.row}"][data-slot="${comp.slot + i}"]`);
             if (slot) slot.classList.add('occupied');
         }
