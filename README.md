@@ -67,6 +67,14 @@ open index.html        # macOS
 
 Or host on any static web server — no backend required.
 
+### Running tests
+
+```bash
+npm install        # once, to install vitest
+npm test           # run all tests
+npm run test:watch # watch mode (re-runs on changes)
+```
+
 ## Keyboard shortcuts
 
 | Key | Function |
@@ -107,11 +115,14 @@ const TRANSLATIONS = {
 
 ```
 din-rail-planner/
-├── index.html   # HTML structure and UI
-├── style.css    # All styles
-├── i18n.js      # Translations (DE, EN)
-├── app.js       # Application logic
-├── LICENSE      # MIT License
+├── index.html      # HTML structure and UI
+├── style.css       # All styles
+├── i18n.js         # Translations (DE, EN)
+├── logic.js        # Pure logic (testable without DOM)
+├── app.js          # Application logic (DOM, events, rendering)
+├── logic.test.js   # Tests (vitest)
+├── package.json    # Dev dependencies (vitest)
+├── LICENSE         # MIT License
 └── README.md
 ```
 
@@ -191,6 +202,14 @@ open index.html         # macOS
 
 Alternativ auf einem beliebigen Webserver hosten — es werden keine Backend-Dienste benötigt.
 
+### Tests ausführen
+
+```bash
+npm install        # einmalig, installiert vitest
+npm test           # alle Tests ausführen
+npm run test:watch # Watch-Modus (automatische Wiederholung bei Änderungen)
+```
+
 ## Tastenkürzel
 
 | Taste | Funktion |
@@ -222,11 +241,14 @@ const TRANSLATIONS = {
 
 ```
 din-rail-planner/
-├── index.html   # HTML-Struktur und UI-Elemente
-├── style.css    # Alle Styles
-├── i18n.js      # Übersetzungen (DE, EN)
-├── app.js       # Anwendungslogik
-├── LICENSE      # MIT-Lizenz
+├── index.html      # HTML-Struktur und UI-Elemente
+├── style.css       # Alle Styles
+├── i18n.js         # Übersetzungen (DE, EN)
+├── logic.js        # Reine Logik (testbar ohne DOM)
+├── app.js          # Anwendungslogik (DOM, Events, Rendering)
+├── logic.test.js   # Tests (vitest)
+├── package.json    # Dev-Abhängigkeiten (vitest)
+├── LICENSE         # MIT-Lizenz
 └── README.md
 ```
 
